@@ -49,6 +49,8 @@ Our framework contains a neural component comprising of four steps, a symbolic c
 
 The system requires access to a GPU, ideally having sufficient memory to support a medium LLM (<30B) and long context (up to 16834 max tokens). The system is designed to work with smaller LLMs and context spaces as well but this may result in a significantly longer processing time, especially for longer tasks. Note only the neural component primarily requires access to the GPU processing. 
 
+### Building the System Environment
+
 Our system accesses the open-source LLMs through the Ollama Client. Consequently, it will be required to be installed. To streamline installing all the dependencies and python packages, we share our DockerFile image. It can be built by running the following command:
 
 
@@ -56,10 +58,12 @@ Our system accesses the open-source LLMs through the Ollama Client. Consequently
 $ docker build --rm -t {YOUR_CONTAINER_NAME} .
 ```
 
-Then to run our system, execute the following command:
+### System Execution
+
+To run our system end-to-end, execute the following command:
 
 ```shell 
-$ docker run  --gpus='"device={DEVICE NUMBER(S)}"' --runtime=nvidia --rm -ti --shm-size=32gb -v $PWD:/app {YOUR_CONTAINER_IMAGE} ./end_to_end_pipeline.sh
+$ docker run  --gpus='"device={DEVICE NUMBER(S)}"' --runtime=nvidia --rm -ti --shm-size=32gb -v $PWD:/app {YOUR_CONTAINER_IMAGE} ./POLIBRA_exe.sh
 ```
 
 The above command runs our ```POLIBRA_exe.sh``` that contains our end-to-end framework, described below completely with all the command-line arguments possible for each step. The steps are sequential, individually producing intermediate outputs and logging to enable increased inspection and system customization. The pipeline could be paused and resumed from any step, given its prior steps have been implemented and the file pathways are correct. 
