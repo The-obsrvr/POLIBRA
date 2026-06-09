@@ -23,7 +23,7 @@ Key Features
 
 ## Data
 
-Refer to this repository, [CMV2BAS Pipeline](), to access our data preparation and CMV2BAS dataset containing discussion threads derived from the public Webis ChangeMyView 2020 Corpus.
+Refer to this repository, [CMV2BAS Pipeline](https://github.com/The-obsrvr/CMV-BAS-Data-Pipeline), to access our data preparation and CMV2BAS dataset containing discussion threads derived from the public Webis ChangeMyView 2020 Corpus.
 
 Alternatively, the system accepts .JSONL input files containing the following JSON format:
 
