@@ -99,11 +99,11 @@ until curl -sf http://127.0.0.1:11434/api/chat \
 echo "${EDU_MODEL} ready."
 
 python src/extract_edu.py \
-    --input      "Data/samples_test.jsonl" \
-    --output     "${OUT}/edu_test.jsonl" \
+    --input      "Data/samples.jsonl" \
+    --output     "${OUT}/edu.jsonl" \
     --ollama-url http://127.0.0.1:11434/api/chat \
     --model      "${EDU_MODEL}" \
-    --log-file   "${OUT}/edu_test.log"
+    --log-file   "${OUT}/edu.log"
 
 kill "${OLLAMA_PID}" && wait "${OLLAMA_PID}" 2>/dev/null || true
 echo "Step 1 complete — GPU free."
@@ -111,9 +111,9 @@ echo "Step 1 complete — GPU free."
 
 ## ── Step 2: PAC selection ─────────────────────────────────────────────────────
 python src/pac_selector.py \
-    --input    "${OUT}/edu_test.jsonl" \
-    --output   "${OUT}/pac_test.jsonl" \
-    --log-file "${OUT}/pac_test.log"
+    --input    "${OUT}/edu.jsonl" \
+    --output   "${OUT}/pac.jsonl" \
+    --log-file "${OUT}/pac.log"
 echo "Step 2 complete — GPU free."
 
 
