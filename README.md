@@ -28,7 +28,27 @@ Refer to this repository, [CMV2BAS Pipeline](https://github.com/The-obsrvr/CMV-B
 Alternatively, the system accepts .JSONL input files containing the following JSON format:
 
 ```json
-
+{
+        "thread_id": "t3_69cxuj_3",
+        "conv_id":   "t3_69cxuj",
+        "title":     "CMV: U.S. healthcare system",
+        "conversation": [
+            {
+                "post_id":    "t3_69cxuj",
+                "speaker_id": "Speaker 1",
+                "text": (
+                    "."
+                ),
+            },
+            {
+                "post_id":    "dh5mxav",
+                "speaker_id": "Speaker 7",
+                "text": (
+                    "T"
+                ),
+            },
+        ],
+    }
 
 ```
 
