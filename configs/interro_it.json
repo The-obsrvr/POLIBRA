@@ -1,0 +1,76 @@
+{
+  "name": "italian_interrogations",
+  "description": "Italian/English parliamentary interrogations (interrogazioni parlamentari). Bilingual segmentation, no CMV boilerplate, Italian-aware clause splitting.",
+  "prompts": {
+    "segmentation": "Sei un esperto di analisi del discorso. Segmenta il testo dato in Unità Elementari del Discorso (EDU).\n\nLINGUA:\nIl testo può essere in italiano o in inglese. Analizzalo nella lingua originale — NON tradurre. Estrai le EDU VERBATIM dal testo di input.\n\nREGOLE:\n- Una EDU è un segmento di testo coerente, estratto LETTERALMENTE dall'input — non parafrasare né alterare le parole\n- Le frasi semplici con una sola proposizione restano un'unica EDU\n- Le frasi composte con più proposizioni vanno divise in EDU separate individuando:\n    * Congiunzioni coordinanti e subordinanti: e, ma, o, oppure, quindi, perché, poiché, sebbene, tuttavia, pertanto, mentre, laddove, a meno che, se, quando, dopo, prima, che, il quale, chi\n    * Confini di punteggiatura: virgole, punti e virgola, due punti, lineette che separano le proposizioni\n    * Altri marcatori discorsivi: inoltre, per di più, di conseguenza, ad esempio, al contrario, d'altra parte\n- Scarta ogni EDU risultante di DUE PAROLE O MENO — non sono argomentativamente utili\n- Se una proposizione non può essere ulteriormente divisa, restituiscila come singola EDU\n\nFORMATO DI OUTPUT — restituisci SOLO questo JSON, senza markdown, senza spiegazioni:\n{\"edus\": [\"EDU 1\", \"EDU 2\", \"EDU 3\"]}\n\nESEMPI:\nInput: Il Governo ha ridotto gli sbarchi, ma i rimpatri restano fermi perché mancano gli accordi bilaterali.\nOutput: {\"edus\": [\"Il Governo ha ridotto gli sbarchi\", \"ma i rimpatri restano fermi\", \"perché mancano gli accordi bilaterali\"]}\n\nInput: Si chiede di sapere quali misure il Ministro intenda adottare. La situazione è grave; inoltre, i fondi stanziati risultano insufficienti.\nOutput: {\"edus\": [\"Si chiede di sapere quali misure il Ministro intenda adottare\", \"La situazione è grave\", \"inoltre, i fondi stanziati risultano insufficienti\"]}\n\nInput: Sì. Ma comunque.\nOutput: {\"edus\": []}\n",
+    "central_proposition": "Sei un esperto di analisi dell'argomentazione. Il tuo compito è identificare la Proposizione Centrale dall'atto di sindacato ispettivo (interrogazione) di apertura.\n\nLINGUA:\nIl testo può essere in italiano o in inglese. Analizzalo nella lingua originale — NON tradurre.\n\nLa Proposizione Centrale è la singola EDU che meglio rappresenta la tesi o la richiesta principale dell'interrogante. Deve:\n1. Provenire dall'atto di apertura\n2. Riflettere al meglio la posizione o la richiesta espressa nel titolo\n3. Affermare qualcosa che l'interrogante sostiene o di cui chiede conto\n\nLe domande retoriche sono valide — affermano una posizione in forma interrogativa.\nEscludi: domande puramente procedurali, formule di apertura, indicazioni di rito (\"si interroga il Ministro\" usato come mera formula).\n\nRiceverai il titolo della discussione e un elenco numerato di EDU dell'atto di apertura.\nSeleziona la singola EDU migliore restituendone il numero d'indice.\n\nFORMATO DI OUTPUT — restituisci SOLO questo JSON, senza markdown, senza spiegazioni:\n{\"central_proposition_idx\": <intero>}\n"
+  },
+  "edu": {
+    "ctx_window": 8192,
+    "chars_per_token": 3,
+    "system_prompt_overhead": 600,
+    "response_headroom_frac": 0.4,
+    "min_edu_words": 2,
+    "deleted_markers": [
+      "\\[testo non disponibile\\]",
+      "\\[omissis\\]",
+      "\\[removed\\]",
+      "\\[deleted\\]"
+    ],
+    "clean_patterns": [],
+    "fallback_connectives": [
+      "e",
+      "ed",
+      "ma",
+      "o",
+      "oppure",
+      "quindi",
+      "perché",
+      "poiché",
+      "sebbene",
+      "tuttavia",
+      "pertanto",
+      "mentre",
+      "laddove",
+      "se",
+      "quando",
+      "dopo",
+      "prima",
+      "che",
+      "il quale",
+      "la quale",
+      "chi",
+      "inoltre",
+      "per di più",
+      "di conseguenza",
+      "ad esempio",
+      "al contrario",
+      "d'altra parte",
+      "and",
+      "but",
+      "or",
+      "so",
+      "because",
+      "however",
+      "therefore",
+      "while",
+      "if",
+      "when"
+    ]
+  },
+  "pac": {
+    "model": "paraphrase-multilingual-mpnet-base-v2",
+    "k": 25,
+    "threshold": 0.4,
+    "implicit_window": 10
+  },
+  "reasoning": {
+    "system": "You are an expert in argumentative discourse analysis.\n\nDEFINITIONS:\n- SUPPORT: The source EDU provides evidence, reasons, or elaboration that strengthens the target EDU's claim.\n- ATTACK: The source EDU contradicts, undermines, rebuts, or weakens the target EDU's claim.\n- NEUTRAL: The source EDU does not argue for or against the target EDU — it is non-argumentative in relation to the target.\n\nLANGUAGE:\nThe EDUs may be in English or Italian. Analyse them in their original language — do NOT translate. Keep relation labels in English (\"support\"/\"attack\"/\"neutral\") regardless of EDU language.\n\nITALIAN EXAMPLES (for calibration):\n- Target: \"i risultati della politica migratoria del Governo sono positivi\"\n  Source: \"gli sbarchi sono diminuiti del 60 per cento rispetto allo scorso anno\" → support\n  Source: \"i rimpatri restano fermi a poche migliaia di casi l'anno\" → attack\n  Source: \"la seduta è convocata per le ore 15\" → neutral\n\nINSTRUCTIONS:\nYou will receive a batch of TARGET EDUs. For each target EDU and each of its SOURCE EDUs, classify the relation as SUPPORT, ATTACK, or NEUTRAL. Be critical — implicit relations (unstated premises, enthymemes) count.\n\nCOMPLETENESS REQUIREMENT — CRITICAL:\nYou MUST output an entry for EVERY target_idx in the batch, in order.\nIf the batch contains targets 0 through 9, your response must contain exactly 10 entries with target_idx 0, 1, 2, ..., 9.\nDo NOT skip any target. Do NOT stop early. Missing targets will corrupt the entire batch.\n\nCONFIDENCE REQUIREMENT:\nFor each relation, you must also state your confidence as a float in [0.0, 1.0].\n- Only label a relation as SUPPORT or ATTACK if your confidence is ABOVE 0.45.\n- If you are uncertain or the relation is weak, ambiguous, or indirect, assign NEUTRAL regardless of your initial intuition.\n- When in doubt, prefer NEUTRAL. Reserve SUPPORT and ATTACK for relations you are clearly confident about.\n\nOUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:\n{\n  \"batch\": [\n    {\n      \"target_idx\": 0,\n      \"relations\": [\n        {\"source_idx\": 0, \"relation\": \"support\", \"confidence\": 0.82},\n        {\"source_idx\": 1, \"relation\": \"neutral\",  \"confidence\": 0.31}\n      ]\n    }\n  ]\n}\n\ntarget_idx is the 0-based position of the target EDU in the batch.\nsource_idx is the 0-based position in that target's SOURCE EDUs list.\n",
+    "tiebreak": "You are an expert in argumentative discourse analysis acting as a tie-breaker.\n\nDEFINITIONS:\n- SUPPORT: The source EDU provides evidence, reasons, or elaboration that strengthens the target EDU's claim.\n- ATTACK: The source EDU contradicts, undermines, rebuts, or weakens the target EDU's claim.\n- NEUTRAL: The source EDU does not argue for or against the target EDU — it is non-argumentative in relation to the target.\n\nLANGUAGE:\nThe EDUs may be in English or Italian. Analyse them in their original language — do NOT translate. Keep relation labels in English (\"support\"/\"attack\"/\"neutral\") regardless of EDU language.\n\nYour role is to resolve uncertainty — either because two previous attempts disagreed, or because both previous attempts failed to produce a valid response. Reason carefully and provide your best judgement.\n\nCONFIDENCE REQUIREMENT:\nFor each relation, state your confidence as a float in [0.0, 1.0].\n- Only label a relation as SUPPORT or ATTACK if your confidence is ABOVE 0.45.\n- If you are uncertain, assign NEUTRAL. Prefer NEUTRAL over a low-confidence SUPPORT or ATTACK.\n\nOUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:\n{\n  \"batch\": [\n    {\n      \"target_idx\": 0,\n      \"relations\": [\n        {\"source_idx\": 0, \"relation\": \"support\", \"confidence\": 0.82},\n        {\"source_idx\": 1, \"relation\": \"neutral\",  \"confidence\": 0.31}\n      ]\n    }\n  ]\n}\n",
+    "cp_review": "You are an expert in argumentative discourse analysis.\n\nYou are reviewing the CENTRAL PROPOSITION of a discussion — the main claim that all other arguments are directed at. This EDU is the focal point of the entire argument structure.\n\nYour task: carefully re-examine each source EDU and determine whether it SUPPORTS or ATTACKS the central proposition, or is genuinely NEUTRAL to it. Be especially diligent — the central proposition is by definition the most argued-about claim in the discussion, so neutral classifications should be rare.\n\nDEFINITIONS:\n- SUPPORT: The source EDU provides evidence, reasons, or elaboration that strengthens or agrees with the central proposition.\n- ATTACK: The source EDU contradicts, undermines, rebuts, or weakens the central proposition.\n- NEUTRAL: The source EDU has absolutely no argumentative bearing on the central proposition.\n\nLANGUAGE:\nThe EDUs may be in English or Italian. Analyse them in their original language — do NOT translate. Keep relation labels in English (\"support\"/\"attack\"/\"neutral\") regardless of EDU language.\n\nCONFIDENCE REQUIREMENT:\nFor each relation, state your confidence as a float in [0.0, 1.0].\n- Only label a relation as SUPPORT or ATTACK if your confidence is ABOVE 0.45.\n- Given the importance of the central proposition, scrutinise carefully before assigning NEUTRAL.\n\nOUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:\n{\n  \"batch\": [\n    {\n      \"target_idx\": 0,\n      \"relations\": [\n        {\"source_idx\": 0, \"relation\": \"attack\",  \"confidence\": 0.87},\n        {\"source_idx\": 1, \"relation\": \"support\", \"confidence\": 0.72}\n      ]\n    }\n  ]\n}\n"
+  },
+  "bas": {
+    "embed_model": "paraphrase-multilingual-MiniLM-L12-v2",
+    "min_argumentative_units": 3
+  }
+}
